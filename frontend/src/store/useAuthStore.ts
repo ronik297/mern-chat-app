@@ -14,18 +14,21 @@ type LoginData = {
     password: string;
 }
 
-interface AuthStore {
-  authUser: {
-    id: string;
+export type User = {
+    _id: string;
     email: string;
-    fullName?: string; 
-    profilePic?: string; 
+    fullName?: string;
+    profilePic?: string;
     createdAt?: string;
-  } | null; 
+}
+
+interface AuthStore {
+  authUser: User | null; 
   isSigningUp: boolean;
   isLoggingIn: boolean;
   isUpdatingProfile: boolean;
   isCheckingAuth: boolean;
+  onlineUsers: string[]; 
   checkAuth: () => Promise<void>;
   signup: (data: SignupData) => Promise<void>;
   logout: () => Promise<void>;
@@ -38,6 +41,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
     isSigningUp: false,
     isLoggingIn: false,
     isUpdatingProfile: false,
+    onlineUsers: [],    
     isCheckingAuth: true,
     checkAuth: async () => {
         try {
