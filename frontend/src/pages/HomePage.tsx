@@ -1,7 +1,9 @@
 
 const HomePage = () => {
   return (
-    <div>HomePage</div>
+    <>
+    <div className="mt-20">HomePage</div>
+    </>
   )
 }
 
