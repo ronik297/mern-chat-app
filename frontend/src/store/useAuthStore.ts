@@ -30,6 +30,7 @@ interface AuthStore {
   signup: (data: SignupData) => Promise<void>;
   logout: () => Promise<void>;
   login: (data: { email: string; password: string }) => Promise<void>;
+  updateProfile: (data: { fullName?: string; profilePic?: string }) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthStore>((set) => ({
@@ -88,5 +89,19 @@ export const useAuthStore = create<AuthStore>((set) => ({
         } finally {
             set({ isLoggingIn: false });
         }
-    }
+    },
+    updateProfile: async (data) => {
+        set({ isUpdatingProfile: true });
+        try {
+            const response = await axiosInstance.put('/auth/update-profile', data);
+            set({authUser: response.data});
+            toast.success('Profile updated successfully!');
+        } catch (error: unknown) {
+            const err = error as AxiosError<{ message: string }>;
+            toast.error(err.response?.data?.message || "Profile update failed");
+            console.error("Error updating profile:", err);
+        } finally {
+            set({ isUpdatingProfile: false });
+        }
+    },
 }))
