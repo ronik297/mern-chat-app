@@ -3,24 +3,39 @@ import { axiosInstance } from '../lib/axios';
 import toast from 'react-hot-toast';
 import type { User } from './useAuthStore';
 
+export type Message = {
+    _id: string;
+    senderId: string;
+    receiverId: string;
+    text: string;
+    image?: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type SendMessageData = {
+    text: string;
+    image?: string | null;
+};
+
 interface ChatState {
-    messages: string[];
+    messages: Message[];
     users: User[];
-    selectedUser: string | null;
+    selectedUser: User | null;
     isUsersLoading: boolean;
     isMessagesLoading: boolean;
     getUsers: () => Promise<void>;
     getMessages: (userId: string) => Promise<void>;
-    setSelectedUser: (userId: string | null) => void;
+    setSelectedUser: (user: User | null) => void;
+    sendMessage: (messageData: SendMessageData) => Promise<void>;
 }
 
-export const useChatStore = create<ChatState>((set) => ({
+export const useChatStore = create<ChatState>((set, get) => ({
     messages: [],
     users: [],
     selectedUser: null, 
     isUsersLoading: false,
     isMessagesLoading: false,
-
 
     getUsers: async () => {
         set({ isUsersLoading: true });
@@ -47,7 +62,17 @@ export const useChatStore = create<ChatState>((set) => ({
             set({ isMessagesLoading: false });
         }
     },
-    // todo: optimize this one later
-    setSelectedUser: (userId: string | null) => set({ selectedUser: userId }),
-       
+
+    sendMessage: async (messageData: SendMessageData) => {
+        const { selectedUser, messages } = get();
+        try {
+            const res = await axiosInstance.post(`/messages/send/${selectedUser?._id}`, messageData);
+            set({ messages: [...messages, res.data] });
+        } catch (error) {
+            toast.error("Failed to send message");
+            console.error('Error sending message:', error);
+        }
+    },
+
+    setSelectedUser: (user: User | null) => set({ selectedUser: user }),
 }))
