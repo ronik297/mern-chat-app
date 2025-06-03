@@ -15,13 +15,14 @@ function App() {
   const { authUser, checkAuth, isCheckingAuth, onlineUsers } = useAuthStore();
   const { theme } = useThemeStore();
 
-  console.log("Online Users:", onlineUsers);
   useEffect(() => {
     checkAuth();
   }, [checkAuth])
 
   if (isCheckingAuth && !authUser) {
-    return <Loader className="size-10 animate-spin" />
+    return <div className="h-screen flex items-center justify-center">
+        <Loader className="size-10 animate-spin" />
+      </div>
   }
 
   return (

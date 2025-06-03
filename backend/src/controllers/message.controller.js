@@ -19,8 +19,6 @@ export const getMessages = async (req, res) => {
     try {
         const { id: userToChatId } = req.params;
         const myId = req.user._id;
-        console.log("Sender ID:", userToChatId, "Receiver ID:", myId );
-
 
         if (!userToChatId) {
             return res.status(400).json({ error: "User ID is required" });
@@ -32,8 +30,6 @@ export const getMessages = async (req, res) => {
                 { senderId: userToChatId, receiverId: myId }
             ]
         });
-
-        console.log("Messages found:", messages);
 
         res.status(200).json(messages);
     } catch (error) { 
