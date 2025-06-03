@@ -11,7 +11,7 @@ import path from 'path';
 dotenv.config();
 
 const PORT = process.env.PORT || 5001;
-const __dirname = path.resolve();
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 app.use(express.json());
 app.use(cookieParser());
@@ -24,9 +24,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/messages', messageRoutes);
 
 if(process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../../frontend', 'dist')));
+    const distPath = path.resolve(__dirname, '../../frontend/dist');
+    app.use(express.static(distPath));
     app.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
+        res.sendFile(path.join(distPath, 'index.html'));
     }
     );
 }
