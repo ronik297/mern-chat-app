@@ -1,4 +1,5 @@
 import cloudinary from '../lib/cloudinary.js';
+import { getReceiverSocketId, io } from '../lib/socket.js';
 import Message from '../models/message.model.js';
 import User from '../models/user.model.js';
 
@@ -16,8 +17,10 @@ export const getUsersForSidebar = async (req, res) => {
 
 export const getMessages = async (req, res) => {
     try {
-        const { id: userToChatId } = req.params.id;
+        const { id: userToChatId } = req.params;
         const myId = req.user._id;
+        console.log("Sender ID:", userToChatId, "Receiver ID:", myId );
+
 
         if (!userToChatId) {
             return res.status(400).json({ error: "User ID is required" });
@@ -25,10 +28,12 @@ export const getMessages = async (req, res) => {
        
         const messages = await Message.find({
             $or: [
-                { sender: myId, receiver: userToChatId },
-                { sender: userToChatId, receiver: myId }
+                { senderId: myId, receiverId: userToChatId },
+                { senderId: userToChatId, receiverId: myId }
             ]
         });
+
+        console.log("Messages found:", messages);
 
         res.status(200).json(messages);
     } catch (error) { 
@@ -61,6 +66,12 @@ export const sendMessage = async (req, res) => {
 
         await newMessge.save();
         // todo: realtime functionality
+
+        const receiverSocketId = getReceiverSocketId(receiverId);
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit('newMessage', newMessge);
+        }
+
         res.status(201).json(newMessge);
     } catch (error) {
         console.error("Error in sendMessage controller", error);

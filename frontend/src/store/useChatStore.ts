@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { axiosInstance } from '../lib/axios';
 import toast from 'react-hot-toast';
-import type { User } from './useAuthStore';
+import { useAuthStore, type User } from './useAuthStore';
 
 export type Message = {
     _id: string;
@@ -28,6 +28,8 @@ interface ChatState {
     getMessages: (userId: string) => Promise<void>;
     setSelectedUser: (user: User | null) => void;
     sendMessage: (messageData: SendMessageData) => Promise<void>;
+    subscribeToMessages: () => void;
+    unsubscribeFromMessages: () => void;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -53,7 +55,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
     getMessages: async (userId) => {
         set({ isMessagesLoading: true });
         try {
+            console.log("Fetching messages for user:", userId);
             const response = await axiosInstance.get(`/messages/${userId}`);
+            console.log("Messages fetched:", response.data);
             set({ messages: response.data });
         } catch (error) {
             console.error('Error fetching messages:', error);
@@ -72,6 +76,25 @@ export const useChatStore = create<ChatState>((set, get) => ({
             toast.error("Failed to send message");
             console.error('Error sending message:', error);
         }
+    },
+
+    subscribeToMessages: () => {
+        const { selectedUser } = get();
+        if (!selectedUser) return;
+
+        const socket = useAuthStore.getState().socket as import("socket.io-client").Socket;
+
+        socket.on("newMessage", (message: Message) => {
+            if(message.senderId !== selectedUser._id) return;
+            set({ 
+                messages: [...get().messages, message],
+            })
+        })
+    },
+
+    unsubscribeFromMessages: () => {
+        const socket = useAuthStore.getState().socket as import("socket.io-client").Socket;
+        socket.off("newMessage");
     },
 
     setSelectedUser: (user: User | null) => set({ selectedUser: user }),
